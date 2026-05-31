@@ -1,142 +1,99 @@
 'use strict';
 
-/**************************************************************************************************
- *                                                                                                *
- * Plese read the following tutorial before implementing tasks:                                   *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer *
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object        *
- *                                                                                                *
- **************************************************************************************************/
-
-
 /**
- * Returns the rectagle object with width and height parameters and getArea() method
- *
- * @param {number} width
- * @param {number} height
- * @return {Object}
- *
- * @example
- *    var r = new Rectangle(10,20);
- *    console.log(r.width);       // => 10
- *    console.log(r.height);      // => 20
- *    console.log(r.getArea());   // => 200
+ * 1. Rectangle
  */
 function Rectangle(width, height) {
-    throw new Error('Not implemented');
+    this.width = width;
+    this.height = height;
 }
 
-
-/**
- * Returns the JSON representation of specified object
- *
- * @param {object} obj
- * @return {string}
- *
- * @example
- *    [1,2,3]   =>  '[1,2,3]'
- *    { width: 10, height : 20 } => '{"height":10,"width":20}'
- */
-function getJSON(obj) {
-    throw new Error('Not implemented');
-}
-
-
-/**
- * Returns the object of specified type from JSON representation
- *
- * @param {Object} proto
- * @param {string} json
- * @return {object}
- *
- * @example
- *    var r = fromJSON(Rectangle.prototype, '{"width":10, "height":20}');
- *
- */
-function fromJSON(proto, json) {
-    throw new Error('Not implemented');
-}
-
-
-/**
- * Css selectors builder
- *
- * Each complex selector can consists of type, id, class, attribute, pseudo-class and pseudo-element selectors:
- *
- *    element#id.class[attr]:pseudoClass::pseudoElement
- *              \----/\----/\----------/
- *              Can be several occurences
- *
- * All types of selectors can be combined using the combinators ' ','+','~','>' .
- *
- * The task is to design a single class, independent classes or classes hierarchy and implement the functionality
- * to build the css selectors using the provided cssSelectorBuilder.
- * Each selector should have the stringify() method to output the string repsentation according to css specification.
- *
- * Provided cssSelectorBuilder should be used as facade only to create your own classes,
- * for example the first method of cssSelectorBuilder can be like this:
- *   element: function(value) {
- *       return new MySuperBaseElementSelector(...)...
- *   },
- *
- * The design of class(es) is totally up to you, but try to make it as simple, clear and readable as possible.
- *
- * @example
- *
- *  var builder = cssSelectorBuilder;
- *
- *  builder.id('main').class('container').class('editable').stringify()  => '#main.container.editable'
- *
- *  builder.element('a').attr('href$=".png"').pseudoClass('focus').stringify()  => 'a[href$=".png"]:focus'
- *
- *  builder.combine(
- *      builder.element('div').id('main').class('container').class('draggable'),
- *      '+',
- *      builder.combine(
- *          builder.element('table').id('data'),
- *          '~',
- *           builder.combine(
- *               builder.element('tr').pseudoClass('nth-of-type(even)'),
- *               ' ',
- *               builder.element('td').pseudoClass('nth-of-type(even)')
- *           )
- *      )
- *  ).stringify()        =>    'div#main.container.draggable + table#data ~ tr:nth-of-type(even)   td:nth-of-type(even)'
- *
- *  For more examples see unit tests.
- */
-
-const cssSelectorBuilder = {
-
-    element: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    id: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    class: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    attr: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    pseudoClass: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    pseudoElement: function(value) {
-        throw new Error('Not implemented');
-    },
-
-    combine: function(selector1, combinator, selector2) {
-        throw new Error('Not implemented');
-    },
+Rectangle.prototype.getArea = function() {
+    return this.width * this.height;
 };
 
+/**
+ * 2. JSON Helpers
+ */
+function getJSON(obj) {
+    return JSON.stringify(obj);
+}
+
+function fromJSON(proto, json) {
+    const obj = JSON.parse(json);
+    Object.setPrototypeOf(obj, proto);
+    return obj;
+}
+
+/**
+ * 3. CssSelectorBuilder
+ * Класс-помощник для построения селектора с валидацией порядка и уникальности
+ */
+class Selector {
+    constructor() {
+        this.parts = {
+            element: null,
+            id: null,
+            classes: [],
+            attrs: [],
+            pseudoClasses: [],
+            pseudoElement: null
+        };
+        // Порядок, определенный спецификацией CSS
+        this.order = ['element', 'id', 'classes', 'attrs', 'pseudoClasses', 'pseudoElement'];
+    }
+
+    _checkOrder(type) {
+        const currentIndex = this.order.indexOf(type);
+        // Проверяем, не были ли добавлены элементы, которые должны идти ПОСЛЕ текущего
+        for (let i = currentIndex + 1; i < this.order.length; i++) {
+            const partName = this.order[i];
+            const part = this.parts[partName];
+            if ((Array.isArray(part) && part.length > 0) || (!Array.isArray(part) && part !== null)) {
+                throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+            }
+        }
+    }
+
+    _checkUnique(type) {
+        if (this.parts[type] !== null) {
+            throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+        }
+    }
+
+    element(value) { this._checkUnique('element'); this._checkOrder('element'); this.parts.element = value; return this; }
+    id(value) { this._checkUnique('id'); this._checkOrder('id'); this.parts.id = value; return this; }
+    class(value) { this._checkOrder('classes'); this.parts.classes.push(value); return this; }
+    attr(value) { this._checkOrder('attrs'); this.parts.attrs.push(value); return this; }
+    pseudoClass(value) { this._checkOrder('pseudoClasses'); this.parts.pseudoClasses.push(value); return this; }
+    pseudoElement(value) { this._checkUnique('pseudoElement'); this._checkOrder('pseudoElement'); this.parts.pseudoElement = value; return this; }
+
+    stringify() {
+        let res = '';
+        if (this.parts.element) res += this.parts.element;
+        if (this.parts.id) res += '#' + this.parts.id;
+        res += this.parts.classes.map(c => '.' + c).join('');
+        res += this.parts.attrs.map(a => '[' + a + ']').join('');
+        res += this.parts.pseudoClasses.map(pc => ':' + pc).join('');
+        if (this.parts.pseudoElement) res += '::' + this.parts.pseudoElement;
+        return res;
+    }
+}
+
+/**
+ * Фасад для построения селекторов
+ */
+const cssSelectorBuilder = {
+    element: (v) => new Selector().element(v),
+    id: (v) => new Selector().id(v),
+    class: (v) => new Selector().class(v),
+    attr: (v) => new Selector().attr(v),
+    pseudoClass: (v) => new Selector().pseudoClass(v),
+    pseudoElement: (v) => new Selector().pseudoElement(v),
+    combine: (s1, comb, s2) => ({
+        stringify: () => `${s1.stringify()} ${comb} ${s2.stringify()}`
+    })
+};
 
 module.exports = {
     Rectangle: Rectangle,

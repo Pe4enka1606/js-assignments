@@ -1,91 +1,59 @@
 'use strict';
 
 /**
- * Returns the bank account number parsed from specified string.
- *
- * You work for a bank, which has recently purchased an ingenious machine to assist in reading letters and faxes sent in by branch offices.
- * The machine scans the paper documents, and produces a string with a bank account that looks like this:
- *
- *    _  _     _  _  _  _  _
- *  | _| _||_||_ |_   ||_||_|
- *  ||_  _|  | _||_|  ||_| _|
- *
- * Each string contains an account number written using pipes and underscores.
- * Each account number should have 9 digits, all of which should be in the range 0-9.
- *
- * Your task is to write a function that can take bank account string and parse it into actual account numbers.
- *
- * @param {string} bankAccount
- * @return {number}
- *
- * Example of return :
- *
- *   '    _  _     _  _  _  _  _ \n'+
- *   '  | _| _||_||_ |_   ||_||_|\n'+     =>  123456789
- *   '  ||_  _|  | _||_|  ||_| _|\n'
- *
- *   ' _  _  _  _  _  _  _  _  _ \n'+
- *   '| | _| _|| ||_ |_   ||_||_|\n'+     => 23056789
- *   '|_||_  _||_| _||_|  ||_| _|\n',
- *
- *   ' _  _  _  _  _  _  _  _  _ \n'+
- *   '|_| _| _||_||_ |_ |_||_||_|\n'+     => 823856989
- *   '|_||_  _||_| _||_| _||_| _|\n',
- *
+ * 1. Bank Account Parser
  */
 function parseBankAccount(bankAccount) {
-    throw new Error('Not implemented');
+    const lines = bankAccount.split('\n');
+    const digitsMap = [
+        [' _ ', '| |', '|_|'], // 0
+        ['   ', '  |', '  |'], // 1
+        [' _ ', ' _|', '|_ '], // 2
+        [' _ ', ' _|', ' _|'], // 3
+        ['   ', '|_|', '  |'], // 4
+        [' _ ', '|_ ', ' _|'], // 5
+        [' _ ', '|_ ', '|_|'], // 6
+        [' _ ', '  |', '  |'], // 7
+        [' _ ', '|_|', '|_|'], // 8
+        [' _ ', '|_|', ' _|']  // 9
+    ];
+
+    let result = '';
+    for (let i = 0; i < 9; i++) {
+        const chunk = [
+            lines[0].substring(i * 3, i * 3 + 3),
+            lines[1].substring(i * 3, i * 3 + 3),
+            lines[2].substring(i * 3, i * 3 + 3)
+        ];
+        result += digitsMap.findIndex(d => d[0] === chunk[0] && d[1] === chunk[1] && d[2] === chunk[2]);
+    }
+    return parseInt(result, 10);
 }
 
-
 /**
- * Returns the string, but with line breaks inserted at just the right places to make sure that no line is longer than the specified column number.
- * Lines can be broken at word boundaries only.
- *
- * @param {string} text
- * @param {number} columns
- * @return {Iterable.<string>}
- *
- * @example :
- *
- *  'The String global object is a constructor for strings, or a sequence of characters.', 26 =>  'The String global object',
- *                                                                                                'is a constructor for',
- *                                                                                                'strings, or a sequence of',
- *                                                                                                'characters.'
- *
- *  'The String global object is a constructor for strings, or a sequence of characters.', 12 =>  'The String',
- *                                                                                                'global',
- *                                                                                                'object is a',
- *                                                                                                'constructor',
- *                                                                                                'for strings,',
- *                                                                                                'or a',
- *                                                                                                'sequence of',
- *                                                                                                'characters.'
+ * 2. Text Wrapper
  */
 function* wrapText(text, columns) {
-    throw new Error('Not implemented');
+    const words = text.split(' ');
+    let currentLine = [];
+    let currentLen = 0;
+
+    for (const word of words) {
+        const space = currentLine.length > 0 ? 1 : 0;
+        if (currentLen + word.length + space <= columns) {
+            currentLine.push(word);
+            currentLen += word.length + space;
+        } else {
+            yield currentLine.join(' ');
+            currentLine = [word];
+            currentLen = word.length;
+        }
+    }
+    if (currentLine.length > 0) yield currentLine.join(' ');
 }
 
-
 /**
- * Returns the rank of the specified poker hand.
- * See the ranking rules here: https://en.wikipedia.org/wiki/List_of_poker_hands.
- *
- * @param {array} hand
- * @return {PokerRank} rank
- *
- * @example
- *   [ '4♥','5♥','6♥','7♥','8♥' ] => PokerRank.StraightFlush
- *   [ 'A♠','4♠','3♠','5♠','2♠' ] => PokerRank.StraightFlush
- *   [ '4♣','4♦','4♥','4♠','10♥' ] => PokerRank.FourOfKind
- *   [ '4♣','4♦','5♦','5♠','5♥' ] => PokerRank.FullHouse
- *   [ '4♣','5♣','6♣','7♣','Q♣' ] => PokerRank.Flush
- *   [ '2♠','3♥','4♥','5♥','6♥' ] => PokerRank.Straight
- *   [ '2♥','4♦','5♥','A♦','3♠' ] => PokerRank.Straight
- *   [ '2♥','2♠','2♦','7♥','A♥' ] => PokerRank.ThreeOfKind
- *   [ '2♥','4♦','4♥','A♦','A♠' ] => PokerRank.TwoPairs
- *   [ '3♥','4♥','10♥','3♦','A♠' ] => PokerRank.OnePair
- *   [ 'A♥','K♥','Q♥','2♦','3♠' ] =>  PokerRank.HighCard
+ * 3. Poker Hand Rank
  */
 const PokerRank = {
     StraightFlush: 8,
@@ -97,50 +65,71 @@ const PokerRank = {
     TwoPairs: 2,
     OnePair: 1,
     HighCard: 0
-}
+};
 
 function getPokerHandRank(hand) {
-    throw new Error('Not implemented');
-}
+    const values = hand.map(c => {
+        const v = c.slice(0, -1);
+        if (v === 'A') return 14;
+        if (v === 'K') return 13;
+        if (v === 'Q') return 12;
+        if (v === 'J') return 11;
+        return parseInt(v, 10);
+    }).sort((a, b) => a - b);
 
+    const suits = hand.map(c => c.slice(-1));
+    const counts = {};
+    values.forEach(v => counts[v] = (counts[v] || 0) + 1);
+
+    const valCounts = Object.values(counts).sort((a, b) => b - a);
+    const isFlush = new Set(suits).size === 1;
+    // Проверка на Straight (включая туз как 1)
+    const isStraight = values.every((v, i) => i === 0 || v === values[i - 1] + 1) ||
+        JSON.stringify(values) === '[2,3,4,5,14]';
+
+    if (isFlush && isStraight) return PokerRank.StraightFlush;
+    if (valCounts[0] === 4) return PokerRank.FourOfKind;
+    if (valCounts[0] === 3 && valCounts[1] === 2) return PokerRank.FullHouse;
+    if (isFlush) return PokerRank.Flush;
+    if (isStraight) return PokerRank.Straight;
+    if (valCounts[0] === 3) return PokerRank.ThreeOfKind;
+    if (valCounts[0] === 2 && valCounts[1] === 2) return PokerRank.TwoPairs;
+    if (valCounts[0] === 2) return PokerRank.OnePair;
+    return PokerRank.HighCard;
+}
 
 /**
- * Returns the rectangles sequence of specified figure.
- * The figure is ASCII multiline string comprised of minus signs -, plus signs +, vertical bars | and whitespaces.
- * The task is to break the figure in the rectangles it is made of.
- *
- * NOTE: The order of rectanles does not matter.
- * 
- * @param {string} figure
- * @return {Iterable.<string>} decomposition to basic parts
- * 
- * @example
- *
- *    '+------------+\n'+
- *    '|            |\n'+
- *    '|            |\n'+              '+------------+\n'+
- *    '|            |\n'+              '|            |\n'+         '+------+\n'+          '+-----+\n'+
- *    '+------+-----+\n'+       =>     '|            |\n'+     ,   '|      |\n'+     ,    '|     |\n'+
- *    '|      |     |\n'+              '|            |\n'+         '|      |\n'+          '|     |\n'+
- *    '|      |     |\n'               '+------------+\n'          '+------+\n'           '+-----+\n'
- *    '+------+-----+\n'
- *
- *
- *
- *    '   +-----+     \n'+
- *    '   |     |     \n'+                                    '+-------------+\n'+
- *    '+--+-----+----+\n'+              '+-----+\n'+          '|             |\n'+
- *    '|             |\n'+      =>      '|     |\n'+     ,    '|             |\n'+
- *    '|             |\n'+              '+-----+\n'           '+-------------+\n'
- *    '+-------------+\n'
+ * 4. Figure Rectangles
  */
 function* getFigureRectangles(figure) {
-   throw new Error('Not implemented');
+    const lines = figure.split('\n');
+    const points = [];
+    for (let r = 0; r < lines.length; r++) {
+        for (let c = 0; c < lines[r].length; c++) {
+            if (lines[r][c] === '+') points.push({ r, c });
+        }
+    }
+
+    for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            const p1 = points[i], p2 = points[j];
+            if (p2.r > p1.r && p2.c > p1.c && lines[p1.r][p2.c] === '+' && lines[p2.r][p1.c] === '+') {
+                let rect = '';
+                for (let r = p1.r; r <= p2.r; r++) {
+                    for (let c = p1.c; c <= p2.c; c++) {
+                        if (r === p1.r || r === p2.r) rect += (c === p1.c || c === p2.c) ? '+' : '-';
+                        else rect += (c === p1.c || c === p2.c) ? '|' : ' ';
+                    }
+                    rect += '\n';
+                }
+                yield rect;
+            }
+        }
+    }
 }
 
-
 module.exports = {
-    parseBankAccount : parseBankAccount,
+    parseBankAccount: parseBankAccount,
     wrapText: wrapText,
     PokerRank: PokerRank,
     getPokerHandRank: getPokerHandRank,
